@@ -14,11 +14,14 @@ This MCP server implements the following tools:
 
 ### Route Management
 - **get_routes**: Retrieve a paginated list of routes owned by the authenticated user, ordered by updated_at descending
-- **get_route_details**: Retrieve full details for a specific route including track points, course points, and points of interest
+> ⚠️ **Known Limitation:** This tool can only access routes that you personally own. **Routes that are shared with you but belong to other people will not appear in your results.**  
+If you want to use a shared route with this server, please make a copy of it into your own RideWithGPS account first.
+
+- **get_route_details**: Retrieve full details for a specific route including track points, course points, and points of interest. You can find the available list of information [here](https://github.com/ridewithgps/developers/blob/master/reference/routes_and_trips.md)
 
 ### Trip & Activity Data
 - **get_trips**: Retrieve a paginated list of trips owned by the authenticated user, ordered by updated_at descending
-- **get_trip_details**: Retrieve full details for a specific trip including track points and performance data
+- **get_trip_details**: Retrieve full details for a specific trip including track points and performance data. You can find the available list of information [here](https://github.com/ridewithgps/developers/blob/master/reference/routes_and_trips.md)
 
 ### User Profile
 - **get_current_user**: Retrieve profile information for the authenticated user
@@ -77,7 +80,7 @@ You can now launch Claude desktop app and ask it to interact with your RideWithG
 - "Show me my user profile so I can admire my optimistically low weight setting"
 - "Sync my data since last week when I pretended that walk to the coffee shop was a training ride"
 
-> To use RideWithGPS MCP Server on other MCP Clients, please follow the same steps.
+> To use RideWithGPS MCP Server on other local MCP Clients, please follow the same steps.
 
 ## API Coverage
 
@@ -100,7 +103,10 @@ Contributors welcome! To contribute to this project:
 
 ### Development Roadmap
 - Utilize OAuth for secure user authentication
-- Deploy MCP server to Smithery/Glama for distribution
+- Deploy the MCP server to Smithery/Glama for distribution
+- Incorporate geospatially-aware track points; currently, only the number is displayed
+- Make pagination optional; it would also be helpful to return trips in descending order by departed time instead of updated time.
+
 
 ## License
 
