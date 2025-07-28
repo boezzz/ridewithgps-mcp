@@ -4,6 +4,94 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { RideWithGPSApi, RideWithGPSConfig, RideWithGPSApiError } from "./api.js";
 
+// TypeScript interfaces for better type management
+interface BaseRouteTrip {
+  id: number;
+  url: string;
+  name: string;
+  visibility?: string;
+  description?: string;
+  locality?: string;
+  administrative_area?: string;
+  country_code?: string;
+  distance: number;
+  elevation_gain?: number;
+  elevation_loss?: number;
+  first_lat?: number;
+  first_lng?: number;
+  last_lat?: number;
+  last_lng?: number;
+  sw_lat?: number;
+  sw_lng?: number;
+  ne_lat?: number;
+  ne_lng?: number;
+  track_type?: string;
+  terrain?: string;
+  difficulty?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RouteListItem extends BaseRouteTrip {
+  unpaved_pct?: number;
+  surface?: string;
+}
+
+interface RouteDetails extends RouteListItem {
+  track_points?: any[];
+  course_points?: any[];
+  points_of_interest?: any[];
+}
+
+interface TripListItem extends BaseRouteTrip {
+  departed_at: string;
+  time_zone?: string;
+  activity_type?: string;
+  fit_sport?: number;
+  fit_sub_sport?: number;
+  is_stationary?: boolean;
+  duration?: number;
+  moving_time?: number;
+  avg_speed?: number;
+  max_speed?: number;
+  avg_cad?: number;
+  min_cad?: number;
+  max_cad?: number;
+  avg_hr?: number;
+  min_hr?: number;
+  max_hr?: number;
+  avg_watts?: number;
+  min_watts?: number;
+  max_watts?: number;
+  calories?: number;
+}
+
+interface TripDetails extends TripListItem {
+  track_points?: any[];
+}
+
+interface CoursePoint {
+  x: number;
+  y: number;
+  d: number;
+  i: number;
+  t: string;
+  n: string;
+  _e?: boolean;
+}
+
+interface PointOfInterest {
+  id: number;
+  type: string;
+  type_id: number;
+  type_name: string;
+  name: string;
+  description?: string;
+  url?: string;
+  lat: number;
+  lng: number;
+}
+
 // Constants
 const SERVER_NAME = "ridewithgps-mcp";
 const SERVER_VERSION = "0.0.1";
@@ -50,11 +138,56 @@ function formatRoutesList(response: any): string {
   }
   output += ":\n\n";
 
-  routes.forEach((route: any, index: number) => {
+  // Each route in the response has all the attributes of the route detail request below, 
+  // except the track_points, course_points and points_of_interest attributes.
+
+  routes.forEach((route: RouteListItem, index: number) => {
     output += `${index + 1}. **${route.name || 'Unnamed Route'}** (ID: ${route.id})\n`;
-    output += `   Distance: ${formatDistance(route.distance)}\n`;
-    output += `   Location: ${route.locality || 'Unknown'}, ${route.administrative_area || 'Unknown'}\n`;
-    output += `   Updated: ${formatDate(route.updated_at)}\n\n`;
+    
+    // Basic route info
+    output += `   Distance: ${formatDistance(route.distance)}`;
+    if (route.elevation_gain) {
+      output += ` | Elevation: +${formatElevation(route.elevation_gain)}`;
+      if (route.elevation_loss) {
+        output += `/-${formatElevation(route.elevation_loss)}`;
+      }
+    }
+    output += `\n`;
+    
+    // Location and geography
+    output += `   Location: ${route.locality || 'Unknown'}, ${route.administrative_area || 'Unknown'}`;
+    if (route.country_code) {
+      output += `, ${route.country_code}`;
+    }
+    output += `\n`;
+    
+    // Route characteristics
+    const characteristics = [];
+    if (route.track_type) characteristics.push(`Type: ${route.track_type}`);
+    if (route.terrain) characteristics.push(`Terrain: ${route.terrain}`);
+    if (route.difficulty) characteristics.push(`Difficulty: ${route.difficulty}`);
+    if (route.surface) characteristics.push(`Surface: ${route.surface}`);
+    if (route.unpaved_pct) characteristics.push(`${route.unpaved_pct}% unpaved`);
+    if (characteristics.length > 0) {
+      output += `   ${characteristics.join(' | ')}\n`;
+    }
+    
+    // Visibility and description
+    if (route.visibility) {
+      output += `   Visibility: ${route.visibility}`;
+    }
+    if (route.description) {
+      const truncatedDesc = route.description.length > 100 
+        ? route.description.substring(0, 97) + '...' 
+        : route.description;
+      output += ` | Description: ${truncatedDesc}`;
+    }
+    if (route.visibility || route.description) {
+      output += `\n`;
+    }
+    
+    // Timestamps
+    output += `   Created: ${formatDate(route.created_at)} | Updated: ${formatDate(route.updated_at)}\n\n`;
   });
 
   if (meta?.next_page_url) {
@@ -65,25 +198,43 @@ function formatRoutesList(response: any): string {
 }
 
 function formatRouteDetails(response: any): string {
-  const route = response.route;
+  const route: RouteDetails = response.route;
   if (!route) {
     return "Route not found.";
   }
 
   let output = `**${route.name || 'Unnamed Route'}**\n`;
   output += `ID: ${route.id}\n`;
-  output += `Description: ${route.description || 'No description'}\n\n`;
+  output += `Description: ${route.description || 'No description'}\n`;
+  if (route.visibility) {
+    output += `Visibility: ${route.visibility}\n`;
+  }
+  output += `\n`;
   
   output += `**Route Details:**\n`;
   output += `Distance: ${formatDistance(route.distance)}\n`;
-  output += `Elevation Gain: ${formatElevation(route.elevation_gain)}\n`;
-  output += `Elevation Loss: ${formatElevation(route.elevation_loss)}\n`;
+  if (route.elevation_gain) {
+    output += `Elevation Gain: ${formatElevation(route.elevation_gain)}\n`;
+  }
+  if (route.elevation_loss) {
+    output += `Elevation Loss: ${formatElevation(route.elevation_loss)}\n`;
+  }
   output += `Track Type: ${route.track_type || 'Unknown'}\n`;
   output += `Terrain: ${route.terrain || 'Unknown'}\n`;
   output += `Difficulty: ${route.difficulty || 'Unknown'}\n`;
   output += `Surface: ${route.surface || 'Unknown'}\n`;
   if (route.unpaved_pct) {
-    output += `Unpaved: ${route.unpaved_pct}%\n`;
+    output += `Unpaved Percentage: ${route.unpaved_pct}%\n`;
+  }
+  
+  // Bounding box coordinates (useful for mapping applications)
+  if (route.first_lat && route.first_lng) {
+    output += `\n**Coordinates:**\n`;
+    output += `Start: ${route.first_lat.toFixed(6)}, ${route.first_lng.toFixed(6)}\n`;
+    output += `End: ${route.last_lat?.toFixed(6) || 'Unknown'}, ${route.last_lng?.toFixed(6) || 'Unknown'}\n`;
+    if (route.sw_lat && route.sw_lng && route.ne_lat && route.ne_lng) {
+      output += `Bounds: SW(${route.sw_lat.toFixed(6)}, ${route.sw_lng.toFixed(6)}) to NE(${route.ne_lat.toFixed(6)}, ${route.ne_lng.toFixed(6)})\n`;
+    }
   }
   
   output += `\n**Location:**\n`;
@@ -99,11 +250,31 @@ function formatRouteDetails(response: any): string {
   }
   
   if (route.course_points?.length) {
-    output += `Course points: ${route.course_points.length}\n`;
+    output += `\n**Course Points (${route.course_points.length}):**\n`;
+    route.course_points.forEach((point: CoursePoint, index: number) => {
+      output += `${index + 1}. ${point.t || 'Unknown'} at ${formatDistance(point.d)}\n`;
+      if (point.n) {
+        output += `   Direction: ${point.n}\n`;
+      }
+      output += `   Location: ${point.y?.toFixed(6)}, ${point.x?.toFixed(6)}\n`;
+      if (point._e) {
+        output += `   (User edited)\n`;
+      }
+    });
   }
   
   if (route.points_of_interest?.length) {
-    output += `Points of interest: ${route.points_of_interest.length}\n`;
+    output += `\n**Points of Interest (${route.points_of_interest.length}):**\n`;
+    route.points_of_interest.forEach((poi: PointOfInterest, index: number) => {
+      output += `${index + 1}. **${poi.name || 'Unnamed POI'}** (${poi.type_name || poi.type || 'Unknown type'})\n`;
+      if (poi.description) {
+        output += `   Description: ${poi.description}\n`;
+      }
+      output += `   Location: ${poi.lat?.toFixed(6)}, ${poi.lng?.toFixed(6)}\n`;
+      if (poi.url) {
+        output += `   URL: ${poi.url}\n`;
+      }
+    });
   }
 
   return output;
@@ -123,14 +294,43 @@ function formatTripsList(response: any): string {
   }
   output += ":\n\n";
 
-  trips.forEach((trip: any, index: number) => {
+  trips.forEach((trip: TripListItem, index: number) => {
     output += `${index + 1}. **${trip.name || 'Unnamed Trip'}** (ID: ${trip.id})\n`;
-    output += `   Distance: ${formatDistance(trip.distance)}\n`;
-    output += `   Duration: ${formatDuration(trip.duration)}\n`;
-    if (trip.activity_type) {
-      output += `   Activity: ${trip.activity_type}\n`;
+
+    // Basic trip info
+    output += `   Distance: ${formatDistance(trip.distance)}`;
+    if (trip.duration) {
+      output += ` | Moving Time: ${formatDuration(trip.moving_time || 0)}`;
     }
-    output += `   Date: ${formatDate(trip.departed_at)}\n\n`;
+    output += `\n`;
+
+    // Activity and performance
+    if (trip.activity_type) {
+      output += `   Activity: ${trip.activity_type}`;
+      if (trip.avg_speed) {
+        output += ` | Avg Speed: ${trip.avg_speed.toFixed(1)} km/h`;
+      }
+      output += `\n`;
+    }
+    
+    // Additional characteristics
+    const characteristics = [];
+    if (trip.track_type) characteristics.push(`Type: ${trip.track_type}`);
+    if (trip.terrain) characteristics.push(`Terrain: ${trip.terrain}`);
+    if (trip.difficulty) characteristics.push(`Difficulty: ${trip.difficulty}`);
+    if (characteristics.length > 0) {
+      output += `   ${characteristics.join(' | ')}\n`;
+    }
+
+    // Timestamps
+    output += `   Departed: ${formatDate(trip.departed_at)}`;
+    if (trip.created_at) {
+      output += ` | Created: ${formatDate(trip.created_at)}`;
+    }
+    if (trip.updated_at) {
+      output += ` | Updated: ${formatDate(trip.updated_at)}`;
+    }
+    output += `\n\n`;
   });
 
   if (meta?.next_page_url) {
@@ -141,7 +341,7 @@ function formatTripsList(response: any): string {
 }
 
 function formatTripDetails(response: any): string {
-  const trip = response.trip;
+  const trip: TripDetails = response.trip;
   if (!trip) {
     return "Trip not found.";
   }
@@ -151,45 +351,116 @@ function formatTripDetails(response: any): string {
   if (trip.description) {
     output += `Description: ${trip.description}\n`;
   }
+  if (trip.visibility) {
+    output += `Visibility: ${trip.visibility}\n`;
+  }
   output += `\n`;
   
   output += `**Trip Details:**\n`;
   output += `Activity Type: ${trip.activity_type || 'Unknown'}\n`;
-  output += `Date: ${formatDate(trip.departed_at)}\n`;
+  if (trip.time_zone) {
+    output += `Timezone: ${trip.time_zone}\n`;
+  }
+  output += `Departed: ${formatDate(trip.departed_at)}\n`;
   output += `Distance: ${formatDistance(trip.distance)}\n`;
-  output += `Duration: ${formatDuration(trip.duration)}\n`;
-  output += `Moving Time: ${formatDuration(trip.moving_time)}\n`;
+  output += `Duration: ${formatDuration(trip.duration || 0)}\n`;
+  output += `Moving Time: ${formatDuration(trip.moving_time || 0)}\n`;
   
+  if (trip.is_stationary) {
+    output += `Stationary Activity: Yes\n`;
+  }
+  
+  // Additional trip characteristics
+  const characteristics = [];
+  if (trip.track_type) characteristics.push(`Type: ${trip.track_type}`);
+  if (trip.terrain) characteristics.push(`Terrain: ${trip.terrain}`);
+  if (trip.difficulty) characteristics.push(`Difficulty: ${trip.difficulty}`);
+  if (characteristics.length > 0) {
+    output += `Characteristics: ${characteristics.join(' | ')}\n`;
+  }
+  
+  // Speed data
+  output += `\n**Speed:**\n`;
   if (trip.avg_speed) {
-    output += `Average Speed: ${trip.avg_speed.toFixed(1)} km/h\n`;
+    output += `Average: ${trip.avg_speed.toFixed(1)} km/h\n`;
   }
   if (trip.max_speed) {
-    output += `Max Speed: ${trip.max_speed.toFixed(1)} km/h\n`;
+    output += `Maximum: ${trip.max_speed.toFixed(1)} km/h\n`;
   }
   
+  // Elevation data
   output += `\n**Elevation:**\n`;
-  output += `Gain: ${formatElevation(trip.elevation_gain)}\n`;
-  output += `Loss: ${formatElevation(trip.elevation_loss)}\n`;
+  if (trip.elevation_gain) {
+    output += `Gain: ${formatElevation(trip.elevation_gain)}\n`;
+  }
+  if (trip.elevation_loss) {
+    output += `Loss: ${formatElevation(trip.elevation_loss)}\n`;
+  }
   
+  // Performance metrics
   if (trip.avg_hr || trip.avg_watts || trip.avg_cad) {
-    output += `\n**Performance:**\n`;
+    output += `\n**Performance Metrics:**\n`;
+    
+    // Heart rate
     if (trip.avg_hr) {
-      output += `Avg Heart Rate: ${trip.avg_hr} bpm\n`;
+      output += `Heart Rate - Avg: ${trip.avg_hr} bpm`;
+      if (trip.min_hr && trip.max_hr) {
+        output += ` (Range: ${trip.min_hr}-${trip.max_hr} bpm)`;
+      }
+      output += `\n`;
     }
+    
+    // Power
     if (trip.avg_watts) {
-      output += `Avg Power: ${trip.avg_watts}W\n`;
+      output += `Power - Avg: ${trip.avg_watts}W`;
+      if (trip.min_watts && trip.max_watts) {
+        output += ` (Range: ${trip.min_watts}-${trip.max_watts}W)`;
+      }
+      output += `\n`;
     }
+    
+    // Cadence
     if (trip.avg_cad) {
-      output += `Avg Cadence: ${trip.avg_cad} rpm\n`;
+      output += `Cadence - Avg: ${trip.avg_cad} rpm`;
+      if (trip.min_cad && trip.max_cad) {
+        output += ` (Range: ${trip.min_cad}-${trip.max_cad} rpm)`;
+      }
+      output += `\n`;
     }
   }
   
   if (trip.calories) {
+    output += `\n**Energy:**\n`;
     output += `Calories: ${trip.calories}\n`;
+  }
+  
+  // Coordinates (useful for mapping applications)
+  if (trip.first_lat && trip.first_lng) {
+    output += `\n**Coordinates:**\n`;
+    output += `Start: ${trip.first_lat.toFixed(6)}, ${trip.first_lng.toFixed(6)}\n`;
+    output += `End: ${trip.last_lat?.toFixed(6) || 'Unknown'}, ${trip.last_lng?.toFixed(6) || 'Unknown'}\n`;
+    if (trip.sw_lat && trip.sw_lng && trip.ne_lat && trip.ne_lng) {
+      output += `Bounds: SW(${trip.sw_lat.toFixed(6)}, ${trip.sw_lng.toFixed(6)}) to NE(${trip.ne_lat.toFixed(6)}, ${trip.ne_lng.toFixed(6)})\n`;
+    }
   }
   
   output += `\n**Location:**\n`;
   output += `${trip.locality || 'Unknown'}, ${trip.administrative_area || 'Unknown'}, ${trip.country_code || 'Unknown'}\n`;
+  
+  // FIT file data
+  if (trip.fit_sport || trip.fit_sub_sport) {
+    output += `\n**FIT Data:**\n`;
+    if (trip.fit_sport) {
+      output += `Sport ID: ${trip.fit_sport}\n`;
+    }
+    if (trip.fit_sub_sport) {
+      output += `Sub-sport ID: ${trip.fit_sub_sport}\n`;
+    }
+  }
+  
+  output += `\n**Timestamps:**\n`;
+  output += `Created: ${formatDate(trip.created_at)}\n`;
+  output += `Updated: ${formatDate(trip.updated_at)}\n`;
   
   if (trip.track_points?.length) {
     output += `\n**Track Data:**\n`;
@@ -343,8 +614,8 @@ function formatDate(dateString: string): string {
 server.registerTool(
   "get_routes",
   {
-    title: "Get User Routes",
-    description: "Retrieve a paginated list of routes owned by the authenticated user, ordered by updated_at descending",
+    title: "Get RideWithGPS Routes",
+    description: "Retrieve a list of cycling routes owned by the user, ordered by updated_at descending",
     inputSchema: {
       page: z.number().min(1).optional().describe("Page number for pagination (starts at 1, optional)")
     }
@@ -371,7 +642,7 @@ server.registerTool(
   "get_route_details",
   {
     title: "Get Route Details",
-    description: "Retrieve full details for a specific route including track points, course points, and points of interest",
+    description: "Retrieve full details for a specific cycling route including track points, course points, and points of interest",
     inputSchema: {
       id: z.number().min(1).describe("The unique ID of the route to retrieve")
     }
@@ -398,8 +669,8 @@ server.registerTool(
 server.registerTool(
   "get_trips",
   {
-    title: "Get User Trips",
-    description: "Retrieve a paginated list of trips owned by the authenticated user, ordered by updated_at descending",
+    title: "Get RideWithGPS Trips",
+    description: "Retrieve a list of user's historical cycling trips, ordered by updated_at descending",
     inputSchema: {
       page: z.number().min(1).optional().describe("Page number for pagination (starts at 1, optional)")
     }
@@ -426,7 +697,7 @@ server.registerTool(
   "get_trip_details",
   {
     title: "Get Trip Details",
-    description: "Retrieve full details for a specific trip including track points and performance data",
+    description: "Retrieve full details for a specific cycling trip including track points and performance data",
     inputSchema: {
       id: z.number().min(1).describe("The unique ID of the trip to retrieve")
     }
@@ -453,8 +724,8 @@ server.registerTool(
 server.registerTool(
   "get_current_user",
   {
-    title: "Get Current User",
-    description: "Retrieve profile information for the authenticated user",
+    title: "Get RideWithGPS User",
+    description: "Retrieve profile information for the user",
     inputSchema: {}
   },
   async () => {
@@ -479,8 +750,8 @@ server.registerTool(
 server.registerTool(
   "get_events",
   {
-    title: "Get User Events",
-    description: "Retrieve a paginated list of events owned by the authenticated user, ordered by created_at descending",
+    title: "Get RideWithGPS Events",
+    description: "Retrieve a list of events owned by the user, ordered by created_at descending",
     inputSchema: {
       page: z.number().min(1).optional().describe("Page number for pagination (starts at 1, optional)")
     }
@@ -535,7 +806,7 @@ server.registerTool(
   "sync_user_data",
   {
     title: "Sync User Data",
-    description: "Retrieve items (routes and/or trips) that the user has interacted with since a given datetime. Useful for maintaining remote copies of user libraries.",
+    description: "Retrieve items (routes and/or trips) that the user has interacted with since a given datetime.",
     inputSchema: {
       since: z.string().describe("ISO8601 formatted datetime (e.g., '2024-01-01T00:00:00Z') to get changes since"),
       assets: z.string().optional().describe("Comma-separated list of asset types to return: 'routes', 'trips', or 'routes,trips' (optional, defaults to API client setting)")
