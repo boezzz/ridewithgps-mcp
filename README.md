@@ -4,6 +4,10 @@
 
 A Model Context Protocol (MCP) server that provides access to the RideWithGPS API, allowing you to interact with routes, trips, events, and user data.
 
+## Requirements
+
+- **Node.js**: 18.0.0 or higher, 20.0.0 or newer recommanded ([Download here](https://nodejs.org/en/download))
+
 ## Tools
 
 This MCP server implements the following tools:
