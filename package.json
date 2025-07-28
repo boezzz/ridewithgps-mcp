@@ -1,0 +1,31 @@
+{
+  "name": "ridewithgps-mcp",
+  "version": "0.0.1",
+  "description": "Model Context Protocol server for RideWithGPS API",
+  "main": "build/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector node build/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "ridewithgps",
+    "cycling",
+    "routes",
+    "trips",
+    "bikes"
+  ],
+  "author": "Erosminer",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
