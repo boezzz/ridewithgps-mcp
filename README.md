@@ -34,6 +34,12 @@ If you want to use a shared route with this server, please make a copy of it int
 - **sync_user_data**: Retrieve items (routes and/or trips) that the user has interacted with since a given datetime
 
 ## Setup
+**In command line, clone this repository and change into its directory**
+
+```bash
+git clone https://github.com/boezzz/ridewithgps-mcp.git
+cd ridewithgps-mcp
+```
 
 **Build the server app:**
 
