@@ -1,4 +1,5 @@
 # RideWithGPS MCP Server
+[![smithery badge](https://smithery.ai/badge/@boezzz/ridewithgps-mcp)](https://smithery.ai/server/@boezzz/ridewithgps-mcp)
 
 [![smithery badge](https://smithery.ai/badge/@boezzz/ridewithgps-mcp)](https://smithery.ai/server/@boezzz/ridewithgps-mcp)
 

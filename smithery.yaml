@@ -1,0 +1,24 @@
+# Smithery configuration file: https://smithery.ai/docs/build/project-config
+
+startCommand:
+  type: stdio
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({ command: 'node', args: ['build/index.js'], env: { RWGPS_API_KEY: config.apiKey, RWGPS_AUTH_TOKEN: config.authToken } })
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - apiKey
+      - authToken
+    properties:
+      apiKey:
+        type: string
+        description: RideWithGPS API Key
+      authToken:
+        type: string
+        description: RideWithGPS Auth Token
+  exampleConfig:
+    apiKey: YOUR_API_KEY_HERE
+    authToken: YOUR_AUTH_TOKEN_HERE
