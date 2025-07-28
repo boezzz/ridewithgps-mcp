@@ -12,26 +12,26 @@ A Model Context Protocol (MCP) server that provides access to the RideWithGPS AP
 
 This MCP server implements the following tools:
 
-### Route Management
-- **get_routes**: Retrieve a paginated list of routes owned by the authenticated user, ordered by updated_at descending
+### Route Retrival
+- **get_routes**: Retrieve a list of routes owned by the user on RideWithGPS, ordered by updated_at descending
 > ⚠️ **Known Limitation:** This tool can only access routes that you personally own. **Routes that are shared with you but belong to other people will not appear in your results.**  
 If you want to use a shared route with this server, please make a copy of it into your own RideWithGPS account first.
 
 - **get_route_details**: Retrieve full details for a specific route including track points, course points, and points of interest. You can find the available list of information [here](https://github.com/ridewithgps/developers/blob/master/reference/routes_and_trips.md)
 
 ### Trip & Activity Data
-- **get_trips**: Retrieve a paginated list of trips owned by the authenticated user, ordered by updated_at descending
+- **get_trips**: Retrieve a list of trips/activities owned by the user on RideWithGPS, ordered by updated_at descending
 - **get_trip_details**: Retrieve full details for a specific trip including track points and performance data. You can find the available list of information [here](https://github.com/ridewithgps/developers/blob/master/reference/routes_and_trips.md)
 
 ### User Profile
-- **get_current_user**: Retrieve profile information for the authenticated user
+- **get_current_user**: Retrieve profile information for the user
 
 ### Event Participation
-- **get_events**: Retrieve a paginated list of events owned by the authenticated user, ordered by created_at descending
+- **get_events**: Retrieve a paginated list of events owned by the user, ordered by created_at descending
 - **get_event_details**: Retrieve full details for a specific event including associated routes
 
 ### Data Synchronization
-- **sync_user_data**: Retrieve items (routes and/or trips) that the user has interacted with since a given datetime, useful for maintaining remote copies of user libraries
+- **sync_user_data**: Retrieve items (routes and/or trips) that the user has interacted with since a given datetime
 
 ## Setup
 
