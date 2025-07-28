@@ -1,8 +1,6 @@
 # RideWithGPS MCP Server
 [![smithery badge](https://smithery.ai/badge/@boezzz/ridewithgps-mcp)](https://smithery.ai/server/@boezzz/ridewithgps-mcp)
 
-[![smithery badge](https://smithery.ai/badge/@boezzz/ridewithgps-mcp)](https://smithery.ai/server/@boezzz/ridewithgps-mcp)
-
 > 🚴 **Dear Cyclists!** Welcome to the RideWithGPS MCP Server—your AI-powered companion for managing your cycling adventures. If you like this project, please consider giving it a star, or better yet, becoming a contributor!
 
 A Model Context Protocol (MCP) server that provides access to the RideWithGPS API, allowing you to interact with routes, trips, events, and user data.
