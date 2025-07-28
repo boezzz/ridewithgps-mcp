@@ -44,7 +44,7 @@ npm run build
 
 **Configure Claude Desktop:**
 
-You must install the [Claude](https://claude.ai/) desktop app which supports MCP.
+You must install the [Claude desktop]([https://claude.ai/](https://claude.ai/download)) app which supports MCP.
 
 You can get your RideWithGPS API credentials from:
 1. **API Key**: Visit the [developer settings page](https://ridewithgps.com/settings/developers) in your RideWithGPS account and create an API client
